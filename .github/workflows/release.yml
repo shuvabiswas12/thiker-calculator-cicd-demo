@@ -1,33 +1,36 @@
-name: Release
+name: Release App
 
 on:
     push:
-        tags: # run only when you push a version tag like v1.0.0
-            - "v*"
-    workflow_dispatch: # optional manual trigger
+        tags:
+            - "v*" # Only run when a tag like v1.0.0 is pushed
+    workflow_dispatch: # Allow manual release if needed
 
-permissions: # 👈 give the job what it needs
-    contents: write # to create the release & upload assets
+permissions:
+    contents: write # REQUIRED for GitHub Release
 
 jobs:
-    release:
-        runs-on: ubuntu-latest
+    build-and-release:
+        runs-on: windows-latest
 
         steps:
-            - name: Checkout
+            - name: Checkout code
               uses: actions/checkout@v4
 
-            - name: Read version
-              id: get_version
-              run: echo "version=$(cat .version)" >> "$GITHUB_OUTPUT"
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.x"
 
-            - name: Zip project
-              run: zip -r "cicd-python-${{ steps.get_version.outputs.version }}.zip" . -x '*.git*' '*.github*'
+            - name: Install PyInstaller
+              run: pip install pyinstaller
 
-            - name: Create Release
+            - name: Build .exe with PyInstaller
+              run: pyinstaller --onefile --noconsole main.py
+
+            - name: Upload app.exe to GitHub Release
               uses: softprops/action-gh-release@v2
               with:
-                  # use the tag that triggered the workflow
                   tag_name: ${{ github.ref_name }}
-                  name: ${{ github.ref_name }}
-                  files: cicd-python-${{ steps.get_version.outputs.version }}.zip
+                  name: Release ${{ github.ref_name }}
+                  files: dist/main.exe # rename if needed (e.g., to app.exe)
