@@ -1,10 +1,6 @@
 name: Release App
 
-on:
-    push:
-        tags:
-            - "v*" # Only run when a tag like v1.0.0 is pushed
-    workflow_dispatch: # Allow manual release if needed
+on: [push, pull_request]
 
 permissions:
     contents: write # REQUIRED for GitHub Release
