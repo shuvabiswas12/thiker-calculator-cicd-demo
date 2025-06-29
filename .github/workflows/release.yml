@@ -22,11 +22,11 @@ jobs:
               run: pip install pyinstaller
 
             - name: Build .exe with PyInstaller
-              run: pyinstaller --onefile --noconsole main.py
+              run: pyinstaller --onefile --noconsole app.py
 
             - name: Upload app.exe to GitHub Release
               uses: softprops/action-gh-release@v2
               with:
                   tag_name: ${{ github.ref_name }}
                   name: Release ${{ github.ref_name }}
-                  files: dist/main.exe # rename if needed (e.g., to app.exe)
+                  files: dist/app.exe # rename if needed (e.g., to app.exe)
