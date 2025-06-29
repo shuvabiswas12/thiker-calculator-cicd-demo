@@ -1,34 +1,33 @@
 name: Release
-on: [push, pull_request]
+
+on:
+    push:
+        tags: # run only when you push a version tag like v1.0.0
+            - "v*"
+    workflow_dispatch: # optional manual trigger
+
+permissions: # 👈 give the job what it needs
+    contents: write # to create the release & upload assets
 
 jobs:
     release:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Checkout code
+            - name: Checkout
               uses: actions/checkout@v4
 
-            - name: Read version from .version file
+            - name: Read version
               id: get_version
-              run: |
-                  VERSION=$(cat .version)
-                  echo "version=$VERSION" >> $GITHUB_OUTPUT
+              run: echo "version=$(cat .version)" >> "$GITHUB_OUTPUT"
 
-            - name: Set up Python
-              uses: actions/setup-python@v5
-              with:
-                  python-version: "3.x"
+            - name: Zip project
+              run: zip -r "cicd-python-${{ steps.get_version.outputs.version }}.zip" . -x '*.git*' '*.github*'
 
-            - name: Zip project files
-              run: |
-                  zip -r cicd-python-${{ steps.get_version.outputs.version }}.zip . -x '*.git*' '*.github*'
-
-            - name: Create GitHub Release
+            - name: Create Release
               uses: softprops/action-gh-release@v2
               with:
-                  tag_name: ${{ steps.get_version.outputs.version }}
-                  name: ${{ steps.get_version.outputs.version }}
+                  # use the tag that triggered the workflow
+                  tag_name: ${{ github.ref_name }}
+                  name: ${{ github.ref_name }}
                   files: cicd-python-${{ steps.get_version.outputs.version }}.zip
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
